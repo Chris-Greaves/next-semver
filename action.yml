@@ -1,0 +1,16 @@
+name: get-semver
+description: Compute the next Semantic Version from git history.
+
+outputs:
+  version:
+    description: The computed next Semantic Version (bare, no `v` prefix).
+    value: ${{ steps.get-semver.outputs.version }}
+
+runs:
+  using: composite
+  steps:
+    - id: get-semver
+      shell: bash
+      run: |
+        "${{ github.action_path }}/get-semver.sh"
+        echo "version=$(cat .VERSION)" >> "$GITHUB_OUTPUT"

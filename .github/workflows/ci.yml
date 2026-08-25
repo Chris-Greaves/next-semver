@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  bats:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npm test
+
+  action-success:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout action source
+        uses: actions/checkout@v4
+        with:
+          path: action-src
+
+      - name: Build a fixture repo with a Release Tag
+        run: |
+          git init -q
+          git config user.email "test@example.com"
+          git config user.name "Test"
+          git config commit.gpgsign false
+          git commit --allow-empty -q -m "chore: init"
+          git tag 1.0.0
+          git commit --allow-empty -q -m "feat: add search endpoint"
+
+      - name: Run get-semver
+        id: get-semver
+        uses: ./action-src
+
+      - name: Assert version output
+        run: |
+          if [ "${{ steps.get-semver.outputs.version }}" != "1.1.0" ]; then
+            echo "expected version output '1.1.0', got '${{ steps.get-semver.outputs.version }}'" >&2
+            exit 1
+          fi
+
+  action-shallow-failure:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Shallow checkout (default actions/checkout, no fetch-depth override)
+        uses: actions/checkout@v4
+
+      - name: Run get-semver against a shallow checkout
+        id: get-semver
+        continue-on-error: true
+        uses: ./
+
+      - name: Assert the step failed
+        run: |
+          if [ "${{ steps.get-semver.outcome }}" != "failure" ]; then
+            echo "expected the get-semver step to fail on a shallow checkout, but it ${{ steps.get-semver.outcome }}" >&2
+            exit 1
+          fi

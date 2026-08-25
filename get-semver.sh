@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -eu
 
-SEMVER_RE='^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'
+SEMVER_RE='^v?(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'
 
 find_last_release_tag() {
   local commit tag_list t
@@ -54,7 +54,7 @@ bump_version() {
 }
 
 main() {
-  local last_tag next_version bump
+  local last_tag last_version next_version bump
 
   if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     echo "get-semver.sh: not a git repository" >&2
@@ -71,8 +71,9 @@ main() {
   if [ -z "$last_tag" ]; then
     next_version="0.1.0"
   else
+    last_version="${last_tag#v}"
     bump=$(bump_type_for_range "$last_tag..HEAD")
-    next_version=$(bump_version "$last_tag" "$bump")
+    next_version=$(bump_version "$last_version" "$bump")
   fi
 
   echo "$next_version" > .VERSION

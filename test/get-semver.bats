@@ -138,9 +138,44 @@ BREAKING CHANGE: storage format is no longer backwards compatible"
   rm -rf "$SHALLOW_DIR"
 }
 
-@test "v-prefixed tag is not recognized as a Release Tag" {
+@test "v-prefixed tag is recognized as a Release Tag, bump applies, output stays bare" {
   git commit --allow-empty -q -m "chore: init"
   git tag v1.0.0
+  git commit --allow-empty -q -m "fix: correct off-by-one"
+
+  run "$SCRIPT"
+
+  [ "$status" -eq 0 ]
+  [ "$(cat .VERSION)" = "1.0.1" ]
+}
+
+@test "most-recent-by-history Release Tag wins regardless of v-prefix style" {
+  git commit --allow-empty -q -m "chore: init"
+  git tag v1.0.0
+  git commit --allow-empty -q -m "fix: correct off-by-one"
+  git tag 1.0.1
+  git commit --allow-empty -q -m "feat: add search endpoint"
+
+  run "$SCRIPT"
+
+  [ "$status" -eq 0 ]
+  [ "$(cat .VERSION)" = "1.1.0" ]
+}
+
+@test "a v-prefixed tag segment with a leading zero is not recognized as a Release Tag" {
+  git commit --allow-empty -q -m "chore: init"
+  git tag v1.0.08
+  git commit --allow-empty -q -m "fix: correct off-by-one"
+
+  run "$SCRIPT"
+
+  [ "$status" -eq 0 ]
+  [ "$(cat .VERSION)" = "0.1.0" ]
+}
+
+@test "a non-standard tag prefix is not recognized as a Release Tag" {
+  git commit --allow-empty -q -m "chore: init"
+  git tag V1.0.0
   git commit --allow-empty -q -m "fix: correct off-by-one"
 
   run "$SCRIPT"

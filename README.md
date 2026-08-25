@@ -19,11 +19,26 @@ Run the script from the root of your git repository:
 cat .VERSION
 ```
 
-It works identically whether run locally or from any CI system — it makes no network calls and requires no configuration. A GitHub Action wrapper (`action.yml`) is planned but not part of this first version; for now, invoke the script directly from your CI step.
+It works identically whether run locally or from any CI system — it makes no network calls and requires no configuration.
+
+## Usage as a GitHub Action
+
+```yaml
+- uses: actions/checkout@v4
+  with:
+    fetch-depth: 0 # required: get-semver needs full history, not a shallow clone
+
+- uses: <owner>/get-semver@v1
+  id: get-semver
+
+- run: echo "Next version is ${{ steps.get-semver.outputs.version }}"
+```
+
+The Action takes no inputs, calls `get-semver.sh` unchanged (so `.VERSION` is still written to disk exactly as when run directly), and exposes the computed version as the `version` step output. Because it makes no network calls itself and does no auto-fetching, a shallow checkout fails the step clearly — always set `fetch-depth: 0` on `actions/checkout`.
 
 ## Limitations
 
 This first version of `get-semver.sh` intentionally keeps its scope narrow. These are deferred follow-ups, not permanent constraints:
 
-- Only strict `MAJOR.MINOR.PATCH` Release Tags are recognized — no `v` prefix, pre-release (`-rc.1`), or build-metadata (`+build.5`) suffixes yet.
+- Only strict `MAJOR.MINOR.PATCH` Release Tags are recognized, with an optional leading lowercase `v` — pre-release (`-rc.1`) and build-metadata (`+build.5`) suffixes aren't yet.
 - Bump Type rules are fixed (`fix:` → patch, `feat:` → minor, `BREAKING CHANGE:`/`!` → major) — no custom rules via a config file yet.

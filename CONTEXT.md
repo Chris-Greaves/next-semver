@@ -5,7 +5,7 @@ A standalone bash script that inspects a git repository's commit history and tag
 ## Language
 
 **Release Tag**:
-A git tag whose name is a bare Semantic Version (`MAJOR.MINOR.PATCH`, per semver.org) — numeric only, no leading `v`, no pre-release or build-metadata suffix. The most recent Release Tag reachable from the current commit is the baseline for the next version.
+A git tag whose name is a Semantic Version (`MAJOR.MINOR.PATCH`, per semver.org), with an optional leading lowercase `v` — no pre-release or build-metadata suffix either way. Both `1.2.0` and `v1.2.0` are recognized as Release Tags; the `v` prefix affects only recognition, never the computed output (see `.VERSION` file). The most recent Release Tag reachable from the current commit is the baseline for the next version.
 _Avoid_: version tag, semver tag
 
 **Bump Type**:
@@ -13,5 +13,5 @@ One of `major`, `minor`, or `patch` — the size of version increment implied by
 _Avoid_: version bump, increment level
 
 **`.VERSION` file**:
-The script's sole output artifact: a single-line file at the repo root containing just the next version string. The interface other tooling reads to consume the computed version ("baking the version into the build").
+The script's sole output artifact: a single-line file at the repo root containing just the next version string, always bare (no `v` prefix) regardless of whether the matched Release Tag was bare or `v`-prefixed. The interface other tooling reads to consume the computed version ("baking the version into the build").
 _Avoid_: version file, output file
