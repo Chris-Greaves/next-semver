@@ -1,5 +1,5 @@
 {
-  "name": "get-semver",
+  "name": "next-semver",
   "version": "1.0.0",
   "description": "A standalone bash script that computes the next Semantic Version from git history.",
   "scripts": {

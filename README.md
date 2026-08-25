@@ -1,4 +1,4 @@
-# get-semver
+# next-semver
 
 A standalone bash script that inspects a git repository's commit history and tags to determine the next Semantic Version, writing the result to a `.VERSION` file.
 
@@ -15,7 +15,7 @@ A standalone bash script that inspects a git repository's commit history and tag
 Run the script from the root of your git repository:
 
 ```sh
-./get-semver.sh
+./next-semver.sh
 cat .VERSION
 ```
 
@@ -26,19 +26,19 @@ It works identically whether run locally or from any CI system — it makes no n
 ```yaml
 - uses: actions/checkout@v4
   with:
-    fetch-depth: 0 # required: get-semver needs full history, not a shallow clone
+    fetch-depth: 0 # required: next-semver needs full history, not a shallow clone
 
-- uses: <owner>/get-semver@v1
-  id: get-semver
+- uses: <owner>/next-semver@v1
+  id: next-semver
 
-- run: echo "Next version is ${{ steps.get-semver.outputs.version }}"
+- run: echo "Next version is ${{ steps.next-semver.outputs.version }}"
 ```
 
-The Action takes no inputs, calls `get-semver.sh` unchanged (so `.VERSION` is still written to disk exactly as when run directly), and exposes the computed version as the `version` step output. Because it makes no network calls itself and does no auto-fetching, a shallow checkout fails the step clearly — always set `fetch-depth: 0` on `actions/checkout`.
+The Action takes no inputs, calls `next-semver.sh` unchanged (so `.VERSION` is still written to disk exactly as when run directly), and exposes the computed version as the `version` step output. Because it makes no network calls itself and does no auto-fetching, a shallow checkout fails the step clearly — always set `fetch-depth: 0` on `actions/checkout`.
 
 ## Limitations
 
-This first version of `get-semver.sh` intentionally keeps its scope narrow. These are deferred follow-ups, not permanent constraints:
+This first version of `next-semver.sh` intentionally keeps its scope narrow. These are deferred follow-ups, not permanent constraints:
 
 - Only strict `MAJOR.MINOR.PATCH` Release Tags are recognized, with an optional leading lowercase `v` — pre-release (`-rc.1`) and build-metadata (`+build.5`) suffixes aren't yet.
 - Bump Type rules are fixed (`fix:` → patch, `feat:` → minor, `BREAKING CHANGE:`/`!` → major) — no custom rules via a config file yet.

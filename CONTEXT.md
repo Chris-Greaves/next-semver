@@ -1,4 +1,4 @@
-# get-semver
+# next-semver
 
 A standalone bash script that inspects a git repository's commit history and tags to determine the next Semantic Version, writing the result to a `.VERSION` file.
 

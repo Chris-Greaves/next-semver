@@ -57,12 +57,12 @@ main() {
   local last_tag last_version next_version bump
 
   if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-    echo "get-semver.sh: not a git repository" >&2
+    echo "next-semver.sh: not a git repository" >&2
     exit 1
   fi
 
   if [ "$(git rev-parse --is-shallow-repository)" = "true" ]; then
-    echo "get-semver.sh: this is a shallow git clone; run with full history (git fetch --unshallow) and try again" >&2
+    echo "next-semver.sh: this is a shallow git clone; run with full history (git fetch --unshallow) and try again" >&2
     exit 1
   fi
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bats
 
-SCRIPT="$BATS_TEST_DIRNAME/../get-semver.sh"
+SCRIPT="$BATS_TEST_DIRNAME/../next-semver.sh"
 
 setup() {
   TEST_DIR="$(mktemp -d)"

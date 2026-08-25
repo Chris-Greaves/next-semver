@@ -39,14 +39,14 @@ jobs:
           git tag 1.0.0
           git commit --allow-empty -q -m "feat: add search endpoint"
 
-      - name: Run get-semver
-        id: get-semver
+      - name: Run next-semver
+        id: next-semver
         uses: ./action-src
 
       - name: Assert version output
         run: |
-          if [ "${{ steps.get-semver.outputs.version }}" != "1.1.0" ]; then
-            echo "expected version output '1.1.0', got '${{ steps.get-semver.outputs.version }}'" >&2
+          if [ "${{ steps.next-semver.outputs.version }}" != "1.1.0" ]; then
+            echo "expected version output '1.1.0', got '${{ steps.next-semver.outputs.version }}'" >&2
             exit 1
           fi
 
@@ -56,14 +56,14 @@ jobs:
       - name: Shallow checkout (default actions/checkout, no fetch-depth override)
         uses: actions/checkout@v4
 
-      - name: Run get-semver against a shallow checkout
-        id: get-semver
+      - name: Run next-semver against a shallow checkout
+        id: next-semver
         continue-on-error: true
         uses: ./
 
       - name: Assert the step failed
         run: |
-          if [ "${{ steps.get-semver.outcome }}" != "failure" ]; then
-            echo "expected the get-semver step to fail on a shallow checkout, but it ${{ steps.get-semver.outcome }}" >&2
+          if [ "${{ steps.next-semver.outcome }}" != "failure" ]; then
+            echo "expected the next-semver step to fail on a shallow checkout, but it ${{ steps.next-semver.outcome }}" >&2
             exit 1
           fi
