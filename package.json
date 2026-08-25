@@ -1,0 +1,12 @@
+{
+  "name": "get-semver",
+  "version": "1.0.0",
+  "description": "A standalone bash script that computes the next Semantic Version from git history.",
+  "scripts": {
+    "test": "bats test/"
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "bats": "^1.13.0"
+  }
+}

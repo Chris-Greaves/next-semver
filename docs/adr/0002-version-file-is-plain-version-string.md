@@ -1,0 +1,3 @@
+# `.VERSION` contains only the version string, not richer release metadata
+
+The README's "containing all this information" phrasing left the file's contents ambiguous — it could plausibly have held the previous version, Bump Type, and considered commits alongside the new version. We decided `.VERSION` holds nothing but the new version string on a single line. This was chosen over a structured format (key=value or JSON) because the stated consumer use case — "baking the version into the build" — only ever needs the version string, and a single-line plain-text contract is trivially consumable (`$(cat .VERSION)`) from any tool or shell, matching the goal of a CI-agnostic script anything can use.

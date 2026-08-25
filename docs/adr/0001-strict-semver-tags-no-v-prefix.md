@@ -1,0 +1,3 @@
+# Release Tags are strict, bare semver — no `v` prefix, no pre-release/build metadata
+
+The README originally implied `v`-prefixed tags (`v0.1.0`). We decided Release Tags must match bare `MAJOR.MINOR.PATCH` per semver.org exactly — no `v` prefix, and no pre-release (`-rc.1`) or build-metadata (`+build.5`) suffixes are recognized as Release Tags in this first pass. This was chosen over supporting the common `vX.Y.Z` GitHub convention or full semver grammar (which would require implementing semver's pre-release precedence rules) to keep the tag-matching logic minimal. Both `v`-prefix support and pre-release handling are explicitly deferred, not rejected — see the README's Limitations section.
