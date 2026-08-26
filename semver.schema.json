@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "next-semver configuration",
+  "description": "Optional .semver.json config for next-semver.sh, customizing which commit types produce which Bump Type.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Optional reference to this schema file, for editor autocomplete/validation. Never inspected by next-semver.sh."
+    },
+    "rules": {
+      "type": "object",
+      "description": "Maps a commit-type keyword (e.g. \"feat\") to the Bump Type it produces. A key overrides a built-in of the same name (feat, fix); any other key adds a new rule. \"none\" means that commit type contributes no bump.",
+      "patternProperties": {
+        "^[a-z]+$": {
+          "type": "string",
+          "enum": ["major", "minor", "patch", "none"]
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

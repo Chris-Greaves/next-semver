@@ -36,9 +36,34 @@ It works identically whether run locally or from any CI system — it makes no n
 
 The Action takes no inputs, calls `next-semver.sh` unchanged (so `.VERSION` is still written to disk exactly as when run directly), and exposes the computed version as the `version` step output. Because it makes no network calls itself and does no auto-fetching, a shallow checkout fails the step clearly — always set `fetch-depth: 0` on `actions/checkout`.
 
+## Custom Bump Type Rules
+
+By default, `fix:` → patch, `feat:` → minor, and a `BREAKING CHANGE:` footer or `!` after the type/scope → major. You can customize the `type:` → Bump Type mapping with an optional `.semver.json` file at the repo root:
+
+```json
+{
+  "$schema": "https://raw.githubusercontent.com/<owner>/next-semver/main/semver.schema.json",
+  "rules": {
+    "feat": "minor",
+    "fix": "patch",
+    "perf": "patch",
+    "docs": "none"
+  }
+}
+```
+
+- The file is optional — if it's absent, behavior is identical to the built-in rules above.
+- `rules` maps a commit-type keyword to a Bump Type: `"major"`, `"minor"`, `"patch"`, or `"none"`. A key matching a built-in (`feat`, `fix`) overrides its default; any other key adds a new rule. `"none"` means that commit type contributes no bump, same as an unrecognized type.
+- Matching is case-sensitive, lowercase-only keys (`^[a-z]+$`), same as the built-in `feat:`/`fix:` checks. `breaking` is a reserved key and is rejected.
+- The optional `"$schema"` key (shown above) is never inspected by the script — it's purely for editor autocomplete/validation. Point it at a raw URL (as above) since [`semver.schema.json`](./semver.schema.json) lives in this repo, not in a consumer repo that only uses the Action — a relative path only resolves if you're running `next-semver.sh` from within a checkout of this repo itself.
+- `BREAKING CHANGE:` footer / `!` suffix detection always yields `major` and can't be reconfigured.
+- `jq` is now a required dependency for this feature (preinstalled on `ubuntu-latest` and `macos-latest` GitHub-hosted runners).
+- Malformed config (invalid JSON, an invalid `rules` key, or an invalid `rules` value) fails the script loudly, with no `.VERSION` written.
+
+Rules scoped to a type-and-scope combination (e.g. a rule specific to `feat(api):`) are a possible future extension, not currently supported.
+
 ## Limitations
 
-This first version of `next-semver.sh` intentionally keeps its scope narrow. These are deferred follow-ups, not permanent constraints:
+This first version of `next-semver.sh` intentionally keeps its scope narrow. This is a deferred follow-up, not a permanent constraint:
 
 - Only strict `MAJOR.MINOR.PATCH` Release Tags are recognized, with an optional leading lowercase `v` — pre-release (`-rc.1`) and build-metadata (`+build.5`) suffixes aren't yet.
-- Bump Type rules are fixed (`fix:` → patch, `feat:` → minor, `BREAKING CHANGE:`/`!` → major) — no custom rules via a config file yet.

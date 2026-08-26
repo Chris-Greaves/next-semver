@@ -226,3 +226,194 @@ BREAKING CHANGE: storage format is no longer backwards compatible"
   [ "$(cat .VERSION)" = "0.1.0" ]
   [[ "$output" != *fatal* ]]
 }
+
+@test "no .semver.json present: behavior is unchanged" {
+  git commit --allow-empty -q -m "chore: init"
+  git tag 1.0.0
+  git commit --allow-empty -q -m "feat: add search endpoint"
+
+  run "$SCRIPT"
+
+  [ "$status" -eq 0 ]
+  [ "$(cat .VERSION)" = "1.1.0" ]
+}
+
+@test ".semver.json can add a new custom commit-type rule" {
+  cat > .semver.json <<'JSON'
+{"rules": {"perf": "patch"}}
+JSON
+  git commit --allow-empty -q -m "chore: init"
+  git tag 1.0.0
+  git commit --allow-empty -q -m "perf: speed up query"
+
+  run "$SCRIPT"
+
+  [ "$status" -eq 0 ]
+  [ "$(cat .VERSION)" = "1.0.1" ]
+}
+
+@test ".semver.json can override a built-in commit-type rule" {
+  cat > .semver.json <<'JSON'
+{"rules": {"feat": "major"}}
+JSON
+  git commit --allow-empty -q -m "chore: init"
+  git tag 1.0.0
+  git commit --allow-empty -q -m "feat: add search endpoint"
+
+  run "$SCRIPT"
+
+  [ "$status" -eq 0 ]
+  [ "$(cat .VERSION)" = "2.0.0" ]
+}
+
+@test ".semver.json rules value 'none' contributes no bump" {
+  cat > .semver.json <<'JSON'
+{"rules": {"docs": "none"}}
+JSON
+  git commit --allow-empty -q -m "chore: init"
+  git tag 1.0.0
+  git commit --allow-empty -q -m "docs: update readme"
+
+  run "$SCRIPT"
+
+  [ "$status" -eq 0 ]
+  [ "$(cat .VERSION)" = "1.0.0" ]
+}
+
+@test ".semver.json mixed-precedence: custom and built-in rules combine, highest wins" {
+  cat > .semver.json <<'JSON'
+{"rules": {"perf": "patch", "docs": "none"}}
+JSON
+  git commit --allow-empty -q -m "chore: init"
+  git tag 1.0.0
+  git commit --allow-empty -q -m "docs: update readme"
+  git commit --allow-empty -q -m "perf: speed up query"
+  git commit --allow-empty -q -m "feat: add search endpoint"
+
+  run "$SCRIPT"
+
+  [ "$status" -eq 0 ]
+  [ "$(cat .VERSION)" = "1.1.0" ]
+}
+
+@test "invalid JSON in .semver.json fails with a clear error and no .VERSION mutation" {
+  printf '{invalid' > .semver.json
+  git commit --allow-empty -q -m "chore: init"
+  git tag 1.0.0
+  git commit --allow-empty -q -m "feat: add search endpoint"
+
+  run "$SCRIPT"
+
+  [ "$status" -ne 0 ]
+  [ -n "$output" ]
+  [ ! -e .VERSION ]
+}
+
+@test "invalid .semver.json rules value fails with a clear error and no .VERSION mutation" {
+  cat > .semver.json <<'JSON'
+{"rules": {"perf": "huge"}}
+JSON
+  git commit --allow-empty -q -m "chore: init"
+  git tag 1.0.0
+  git commit --allow-empty -q -m "feat: add search endpoint"
+
+  run "$SCRIPT"
+
+  [ "$status" -ne 0 ]
+  [ -n "$output" ]
+  [ ! -e .VERSION ]
+}
+
+@test "invalid .semver.json rules key fails with a clear error and no .VERSION mutation" {
+  cat > .semver.json <<'JSON'
+{"rules": {"Feat": "minor"}}
+JSON
+  git commit --allow-empty -q -m "chore: init"
+  git tag 1.0.0
+  git commit --allow-empty -q -m "feat: add search endpoint"
+
+  run "$SCRIPT"
+
+  [ "$status" -ne 0 ]
+  [ -n "$output" ]
+  [ ! -e .VERSION ]
+}
+
+@test "'breaking' is a reserved .semver.json rules key and is rejected" {
+  cat > .semver.json <<'JSON'
+{"rules": {"breaking": "major"}}
+JSON
+  git commit --allow-empty -q -m "chore: init"
+  git tag 1.0.0
+  git commit --allow-empty -q -m "feat: add search endpoint"
+
+  run "$SCRIPT"
+
+  [ "$status" -ne 0 ]
+  [ -n "$output" ]
+  [ ! -e .VERSION ]
+}
+
+@test "BREAKING CHANGE detection stays independent of .semver.json" {
+  cat > .semver.json <<'JSON'
+{"rules": {"feat": "none", "fix": "none"}}
+JSON
+  git commit --allow-empty -q -m "chore: init"
+  git tag 1.0.0
+  git commit --allow-empty -q -m "feat!: drop support for legacy config"
+
+  run "$SCRIPT"
+
+  [ "$status" -eq 0 ]
+  [ "$(cat .VERSION)" = "2.0.0" ]
+}
+
+@test "missing jq with .semver.json present fails with a clear jq-related error, not a JSON error" {
+  cat > .semver.json <<'JSON'
+{"rules": {"perf": "patch"}}
+JSON
+  git commit --allow-empty -q -m "chore: init"
+  git tag 1.0.0
+  git commit --allow-empty -q -m "feat: add search endpoint"
+
+  jq_dir=$(dirname "$(command -v jq)")
+  stripped_path=$(printf '%s' "$PATH" | tr ':' '\n' | grep -Fxv "$jq_dir" | tr '\n' ':')
+
+  old_path="$PATH"
+  PATH="$stripped_path"
+  run "$SCRIPT"
+  PATH="$old_path"
+
+  [ "$status" -ne 0 ]
+  [[ "$output" == *jq* ]]
+  [ ! -e .VERSION ]
+}
+
+@test "a non-object .semver.json 'rules' value fails with a clear error and no .VERSION mutation" {
+  cat > .semver.json <<'JSON'
+{"rules": false}
+JSON
+  git commit --allow-empty -q -m "chore: init"
+  git tag 1.0.0
+  git commit --allow-empty -q -m "feat: add search endpoint"
+
+  run "$SCRIPT"
+
+  [ "$status" -ne 0 ]
+  [ -n "$output" ]
+  [ ! -e .VERSION ]
+}
+
+@test "a valid .semver.json with an unrelated \$schema key has no effect on behavior" {
+  cat > .semver.json <<'JSON'
+{"$schema": "./semver.schema.json", "rules": {"feat": "minor", "fix": "patch"}}
+JSON
+  git commit --allow-empty -q -m "chore: init"
+  git tag 1.0.0
+  git commit --allow-empty -q -m "fix: correct off-by-one"
+
+  run "$SCRIPT"
+
+  [ "$status" -eq 0 ]
+  [ "$(cat .VERSION)" = "1.0.1" ]
+}
