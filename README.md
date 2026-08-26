@@ -42,7 +42,7 @@ By default, `fix:` → patch, `feat:` → minor, and a `BREAKING CHANGE:` footer
 
 ```json
 {
-  "$schema": "https://raw.githubusercontent.com/<owner>/next-semver/main/semver.schema.json",
+  "$schema": "https://raw.githubusercontent.com/Chris-Greaves/next-semver/refs/heads/main/semver.schema.json",
   "rules": {
     "feat": "minor",
     "fix": "patch",
