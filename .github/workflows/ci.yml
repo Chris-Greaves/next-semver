@@ -14,7 +14,7 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout action source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: action-src
 
@@ -54,7 +54,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Shallow checkout (default actions/checkout, no fetch-depth override)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Run next-semver against a shallow checkout
         id: next-semver
